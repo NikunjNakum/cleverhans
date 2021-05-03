@@ -296,9 +296,7 @@ class TensorOptimizer(object):
 
         # Assumes `x` is a list,
         # and contains a tensor representing a batch of images
-        if not (len(x) == 1 and isinstance(
-            x, list
-        )):
+        if not (len(x) == 1 and isinstance(x, list)):
             raise AssertionError("x should be a list and contain only one image tensor")
         x = x[0]
         loss = reduce_mean(loss_fn(x), axis=0)

@@ -49,9 +49,7 @@ class LBFGS(Attack):
         :param x: (required) A tensor with the inputs.
         :param kwargs: See `parse_params`
         """
-        if (
-            self.sess is None
-        ):
+        if self.sess is None:
             raise AssertionError("Cannot use `generate` when no `sess` was provided")
         self.parse_params(**kwargs)
 
@@ -199,7 +197,7 @@ class LBFGS_impl(object):
         """
 
         def lbfgs_objective(adv_x, self, targets, oimgs, CONST):
-            """ returns the function value and the gradient for fmin_l_bfgs_b """
+            """returns the function value and the gradient for fmin_l_bfgs_b"""
             loss = self.sess.run(
                 self.loss,
                 feed_dict={
@@ -221,7 +219,7 @@ class LBFGS_impl(object):
             return loss, grad.flatten().astype(float)
 
         def attack_success(out, target, targeted_attack):
-            """ returns attack result """
+            """returns attack result"""
             if targeted_attack:
                 return out == target
             else:

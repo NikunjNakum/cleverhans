@@ -70,9 +70,7 @@ class CarliniWagnerL2(Attack):
         :param x: A tensor with the inputs.
         :param kwargs: See `parse_params`
         """
-        if (
-            self.sess is None
-        ):
+        if self.sess is None:
             raise AssertionError("Cannot use `generate` when no `sess` was provided")
         self.parse_params(**kwargs)
 

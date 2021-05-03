@@ -68,16 +68,12 @@ class HopSkipJumpAttack(Attack):
         self.parse_params(**kwargs)
         shape = [int(i) for i in x.get_shape().as_list()[1:]]
 
-        if (
-            self.sess is None
-        ):
+        if self.sess is None:
             raise AssertionError("Cannot use `generate` when no `sess` was provided")
         _check_first_dimension(x, "input")
         if self.y_target is not None:
             _check_first_dimension(self.y_target, "y_target")
-            if (
-                self.image_target is None
-            ):
+            if self.image_target is None:
                 raise AssertionError("Require a target image for targeted attack.")
             _check_first_dimension(self.image_target, "image_target")
 
@@ -98,7 +94,7 @@ class HopSkipJumpAttack(Attack):
         self.logits = self.model.get_logits(self.input_ph)
 
         def hsja_wrap(x, target_label, target_image):
-            """ Wrapper to use tensors as input and output. """
+            """Wrapper to use tensors as input and output."""
             return np.array(
                 self._hsja(x, target_label, target_image), dtype=self.np_dtype
             )
@@ -394,12 +390,12 @@ def _check_first_dimension(x, tensor_name):
 
 
 def clip_image(image, clip_min, clip_max):
-    """ Clip an image, or an image batch, with upper and lower threshold. """
+    """Clip an image, or an image batch, with upper and lower threshold."""
     return np.minimum(np.maximum(clip_min, image), clip_max)
 
 
 def compute_distance(x_ori, x_pert, constraint="l2"):
-    """ Compute the distance between two images. """
+    """Compute the distance between two images."""
     if constraint == "l2":
         dist = np.linalg.norm(x_ori - x_pert)
     elif constraint == "linf":
@@ -410,7 +406,7 @@ def compute_distance(x_ori, x_pert, constraint="l2"):
 def approximate_gradient(
     decision_function, sample, num_evals, delta, constraint, shape, clip_min, clip_max
 ):
-    """ Gradient direction estimation """
+    """Gradient direction estimation"""
     # Generate random vectors.
     noise_shape = [num_evals] + list(shape)
     if constraint == "l2":
@@ -445,7 +441,7 @@ def approximate_gradient(
 
 
 def project(original_image, perturbed_images, alphas, shape, constraint):
-    """ Projection onto given l2 / linf balls in a batch. """
+    """Projection onto given l2 / linf balls in a batch."""
     alphas_shape = [len(alphas)] + [1] * len(shape)
     alphas = alphas.reshape(alphas_shape)
     if constraint == "l2":
@@ -460,7 +456,7 @@ def project(original_image, perturbed_images, alphas, shape, constraint):
 def binary_search_batch(
     original_image, perturbed_images, decision_function, shape, constraint, theta
 ):
-    """ Binary search to approach the boundary. """
+    """Binary search to approach the boundary."""
 
     # Compute distance between each of perturbed image and original image.
     dists_post_update = np.array(

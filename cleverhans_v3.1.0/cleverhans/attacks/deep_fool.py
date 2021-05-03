@@ -57,9 +57,7 @@ class DeepFool(Attack):
         :param x: The model's symbolic inputs.
         :param kwargs: See `parse_params`
         """
-        if (
-            self.sess is None
-        ):
+        if self.sess is None:
             raise AssertionError("Cannot use `generate` when no `sess` was provided")
         from cleverhans.utils_tf import jacobian_graph
 
@@ -70,9 +68,7 @@ class DeepFool(Attack):
         # Define graph wrt to this input placeholder
         logits = self.model.get_logits(x)
         self.nb_classes = logits.get_shape().as_list()[-1]
-        if (
-            self.nb_candidate > self.nb_classes
-        ):
+        if self.nb_candidate > self.nb_classes:
             raise AssertionError("nb_candidate should not be greater than nb_classes")
         preds = tf.reshape(
             tf.nn.top_k(logits, k=self.nb_candidate)[0], [-1, self.nb_candidate]
