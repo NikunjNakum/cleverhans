@@ -45,7 +45,7 @@ NUM_TEST_IMG = 26032
 
 
 def read_SVHN(data_folder):
-    """ Reads and parses examples from SVHN data files """
+    """Reads and parses examples from SVHN data files"""
 
     train_img = []
     train_label = []
