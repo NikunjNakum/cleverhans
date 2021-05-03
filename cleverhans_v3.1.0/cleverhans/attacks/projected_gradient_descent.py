@@ -69,7 +69,8 @@ class ProjectedGradientDescent(Attack):
         :param kwargs: See `parse_params`
         """
         # Parse and save attack-specific parameters
-        assert self.parse_params(**kwargs)
+        if not self.parse_params(**kwargs):
+            raise AssertionError
 
         asserts = []
 
@@ -270,7 +271,8 @@ class ProjectedGradientDescent(Attack):
         if isinstance(eps, float) and isinstance(eps_iter, float):
             # If these are both known at compile time, we can check before anything
             # is run. If they are tf, we can't check them yet.
-            assert eps_iter <= eps, (eps_iter, eps)
+            if eps_iter > eps:
+                raise AssertionError(eps_iter, eps)
 
         if self.y is not None and self.y_target is not None:
             raise ValueError("Must not set both y and y_target")

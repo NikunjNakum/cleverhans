@@ -58,7 +58,8 @@ class MomentumIterativeMethod(Attack):
         :param kwargs: Keyword arguments. See `parse_params` for documentation.
         """
         # Parse and save attack-specific parameters
-        assert self.parse_params(**kwargs)
+        if not self.parse_params(**kwargs):
+            raise AssertionError
 
         asserts = []
 

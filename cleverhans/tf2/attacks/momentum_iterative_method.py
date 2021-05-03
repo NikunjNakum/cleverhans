@@ -104,7 +104,8 @@ def momentum_iterative_method(
         i += 1
 
     if sanity_checks:
-        assert np.all(asserts)
+        if not np.all(asserts):
+            raise AssertionError
 
     return adv_x
 

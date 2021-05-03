@@ -46,7 +46,8 @@ class SpatialTransformationMethod(Attack):
         :param kwargs: See `parse_params`
         """
         # Parse and save attack-specific parameters
-        assert self.parse_params(**kwargs)
+        if not self.parse_params(**kwargs):
+            raise AssertionError
 
         from cleverhans.attacks_tf import spm
 

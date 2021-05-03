@@ -63,7 +63,8 @@ def fast_gradient_method(
     # If clipping is needed, reset all values outside of [clip_min, clip_max]
     if (clip_min is not None) or (clip_max is not None):
         # We don't currently support one-sided clipping
-        assert clip_min is not None and clip_max is not None
+        if not (clip_min is not None and clip_max is not None):
+            raise AssertionError
         adv_x = np.clip(adv_x, a_min=clip_min, a_max=clip_max)
 
     return adv_x

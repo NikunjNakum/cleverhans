@@ -43,7 +43,8 @@ def projected_gradient_descent(
     :return: a tensor for the adversarial example
     """
 
-    assert eps_iter <= eps, (eps_iter, eps)
+    if eps_iter > eps:
+        raise AssertionError(eps_iter, eps)
     if norm == 1:
         raise NotImplementedError(
             "It's not clear that FGM is a good inner loop"

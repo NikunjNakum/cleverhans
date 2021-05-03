@@ -22,7 +22,8 @@ def pair_visual(original, adversarial, figure=None):
     adversarial = np.squeeze(adversarial)
 
     # Ensure our inputs are of proper shape
-    assert len(original.shape) == 2 or len(original.shape) == 3
+    if not (len(original.shape) == 2 or len(original.shape) == 3):
+        raise AssertionError
 
     # To avoid creating figures per input sample, reuse the sample plot
     if figure is None:

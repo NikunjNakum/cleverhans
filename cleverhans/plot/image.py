@@ -57,22 +57,27 @@ def as_pil(ndarray, min_val=None, max_val=None):
       This can be ambiguous, so it is better to specify if known.
     """
 
-    assert isinstance(ndarray, np.ndarray)
+    if not isinstance(ndarray, np.ndarray):
+        raise AssertionError
 
     # rows x cols for grayscale image
     # rows x cols x channels for color
-    assert ndarray.ndim in [2, 3]
+    if ndarray.ndim not in [2, 3]:
+        raise AssertionError
     if ndarray.ndim == 3:
         channels = ndarray.shape[2]
         # grayscale or RGB
-        assert channels in [1, 3]
+        if channels not in [1, 3]:
+            raise AssertionError
 
     actual_min = ndarray.min()
     actual_max = ndarray.max()
 
     if min_val is not None:
-        assert actual_min >= min_val
-        assert actual_max <= max_val
+        if actual_min < min_val:
+            raise AssertionError
+        if actual_max > max_val:
+            raise AssertionError
 
     if np.issubdtype(ndarray.dtype, np.floating):
         if min_val is None:
@@ -95,13 +100,17 @@ def as_pil(ndarray, min_val=None, max_val=None):
         ndarray = np.cast["uint8"](ndarray)
     elif "int" in str(ndarray.dtype):
         if min_val is not None:
-            assert min_val == 0
+            if min_val != 0:
+                raise AssertionError
         else:
-            assert actual_min >= 0.0
+            if actual_min < 0.0:
+                raise AssertionError
         if max_val is not None:
-            assert max_val == 255
+            if max_val != 255:
+                raise AssertionError
         else:
-            assert actual_max <= 255.0
+            if actual_max > 255.0:
+                raise AssertionError
     else:
         raise ValueError("Unrecognized dtype")
 
@@ -128,7 +137,8 @@ def make_grid(image_batch):
     pr = int(np.sqrt(m))
     pc = int(np.ceil(float(m) / pr))
     extra_m = pr * pc
-    assert extra_m > m
+    if extra_m <= m:
+        raise AssertionError
 
     padded = np.concatenate((padded, np.zeros((extra_m - m, ir, ic, ch))), axis=0)
 
@@ -136,7 +146,8 @@ def make_grid(image_batch):
     row_content = [np.split(content, pc) for content in row_content]
     rows = [np.concatenate(content, axis=2) for content in row_content]
     grid = np.concatenate(rows, axis=1)
-    assert grid.shape[0] == 1, grid.shape
+    if grid.shape[0] != 1:
+        raise AssertionError(grid.shape)
     grid = grid[0]
 
     return grid

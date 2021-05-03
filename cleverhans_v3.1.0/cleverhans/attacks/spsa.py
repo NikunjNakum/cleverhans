@@ -47,7 +47,8 @@ class SPSA(Attack):
             "is_targeted",
         ]
 
-        assert isinstance(self.model, Model)
+        if not isinstance(self.model, Model):
+            raise AssertionError
 
     def generate(
         self,
@@ -124,7 +125,8 @@ class SPSA(Attack):
             )
             nb_iter = num_steps
         del num_steps
-        assert nb_iter is not None
+        if nb_iter is None:
+            raise AssertionError
 
         if (y is not None) + (y_target is not None) != 1:
             raise ValueError(
@@ -140,7 +142,8 @@ class SPSA(Attack):
                 " It may become an error to specify it on or after "
                 "2019-04-15."
             )
-            assert is_targeted == y_target is not None
+            if not is_targeted == y_target is not None:
+                raise AssertionError
 
         is_targeted = y_target is not None
 
@@ -196,27 +199,33 @@ class SPSA(Attack):
     def generate_np(self, x_val, **kwargs):
         if "epsilon" in kwargs:
             warnings.warn("Using deprecated argument: see `generate`")
-            assert "eps" not in kwargs
+            if "eps" in kwargs:
+                raise AssertionError
             kwargs["eps"] = kwargs["epsilon"]
             del kwargs["epsilon"]
-        assert "eps" in kwargs
+        if "eps" not in kwargs:
+            raise AssertionError
 
         if "num_steps" in kwargs:
             warnings.warn("Using deprecated argument: see `generate`")
-            assert "nb_iter" not in kwargs
+            if "nb_iter" in kwargs:
+                raise AssertionError
             kwargs["nb_iter"] = kwargs["num_steps"]
             del kwargs["num_steps"]
 
         if "y" in kwargs and kwargs["y"] is not None:
-            assert kwargs["y"].dtype in [np.int32, np.int64]
+            if kwargs["y"].dtype not in [np.int32, np.int64]:
+                raise AssertionError
         if "y_target" in kwargs and kwargs["y_target"] is not None:
-            assert kwargs["y_target"].dtype in [np.int32, np.int64]
+            if kwargs["y_target"].dtype not in [np.int32, np.int64]:
+                raise AssertionError
 
         # Call self.generate() sequentially for each image in the batch
         x_adv = []
         batch_size = x_val.shape[0]
         y = kwargs.pop("y", [None] * batch_size)
-        assert len(x_val) == len(y), "# of images and labels should match"
+        if len(x_val) != len(y):
+            raise AssertionError("# of images and labels should match")
         for x_single, y_single in zip(x_val, y):
             x = np.expand_dims(x_single, axis=0)
             adv_img = super(SPSA, self).generate_np(x, y=y_single, **kwargs)
@@ -287,9 +296,10 @@ class TensorOptimizer(object):
 
         # Assumes `x` is a list,
         # and contains a tensor representing a batch of images
-        assert len(x) == 1 and isinstance(
+        if not (len(x) == 1 and isinstance(
             x, list
-        ), "x should be a list and contain only one image tensor"
+        )):
+            raise AssertionError("x should be a list and contain only one image tensor")
         x = x[0]
         loss = reduce_mean(loss_fn(x), axis=0)
         return tf.gradients(loss, x)
@@ -407,7 +417,8 @@ class SPSAAdam(TensorAdam):
         compare_to_analytic_grad=False,
     ):
         super(SPSAAdam, self).__init__(lr=lr)
-        assert num_samples % 2 == 0, "number of samples must be even"
+        if num_samples % 2 != 0:
+            raise AssertionError("number of samples must be even")
         self._delta = delta
         self._num_samples = num_samples // 2  # Since we mirror +/- delta later
         self._num_iters = num_iters
@@ -430,11 +441,13 @@ class SPSAAdam(TensorAdam):
         # Assumes `x` is a list, containing a [1, H, W, C] image
         # If static batch dimension is None, tf.reshape to batch size 1
         # so that static shape can be inferred
-        assert len(x) == 1
+        if len(x) != 1:
+            raise AssertionError
         static_x_shape = x[0].get_shape().as_list()
         if static_x_shape[0] is None:
             x[0] = tf.reshape(x[0], [1] + static_x_shape[1:])
-        assert x[0].get_shape().as_list()[0] == 1
+        if x[0].get_shape().as_list()[0] != 1:
+            raise AssertionError
         x = x[0]
         x_shape = x.get_shape().as_list()
 
@@ -698,7 +711,8 @@ def projected_optimization(
     methods. The method uses a tf.while_loop to optimize a loss function in
     a single sess.run() call.
     """
-    assert num_steps is not None
+    if num_steps is None:
+        raise AssertionError
     if is_debug:
         with tf.device("/cpu:0"):
             input_image = tf.Print(

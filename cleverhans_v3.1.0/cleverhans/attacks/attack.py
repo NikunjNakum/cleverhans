@@ -335,7 +335,8 @@ def arg_type(arg_names, kwargs):
       Callers shouldn't rely on the exact structure of this object,
       just its hashability and one-to-one mapping between graph structures.
     """
-    assert isinstance(arg_names, tuple)
+    if not isinstance(arg_names, tuple):
+        raise AssertionError
     passed = tuple(name in kwargs for name in arg_names)
     passed_and_not_none = []
     for name in arg_names:
@@ -353,11 +354,13 @@ def arg_type(arg_names, kwargs):
         if value is None:
             dtypes.append(None)
             continue
-        assert hasattr(value, "dtype"), type(value)
+        if not hasattr(value, "dtype"):
+            raise AssertionError(type(value))
         dtype = value.dtype
         if not isinstance(dtype, np.dtype):
             dtype = dtype.as_np_dtype
-        assert isinstance(dtype, np.dtype)
+        if not isinstance(dtype, np.dtype):
+            raise AssertionError
         dtypes.append(dtype)
     dtypes = tuple(dtypes)
     return (passed, passed_and_not_none, dtypes)

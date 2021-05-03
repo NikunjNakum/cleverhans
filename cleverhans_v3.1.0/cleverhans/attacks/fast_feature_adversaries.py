@@ -38,7 +38,8 @@ class FastFeatureAdversaries(Attack):
         self.feedable_kwargs = ("eps", "eps_iter", "clip_min", "clip_max")
         self.structural_kwargs = ["ord", "nb_iter", "layer"]
 
-        assert isinstance(self.model, Model)
+        if not isinstance(self.model, Model):
+            raise AssertionError
 
     def parse_params(
         self,
@@ -140,7 +141,8 @@ class FastFeatureAdversaries(Attack):
         """
 
         # Parse and save attack-specific parameters
-        assert self.parse_params(**kwargs)
+        if not self.parse_params(**kwargs):
+            raise AssertionError
 
         g_feat = self.model.fprop(g)[self.layer]
 

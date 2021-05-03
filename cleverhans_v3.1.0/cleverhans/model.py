@@ -141,7 +141,8 @@ class Model(object):
             scope_vars = tf.get_collection(
                 tf.GraphKeys.TRAINABLE_VARIABLES, self.scope + "/"
             )
-            assert len(scope_vars) > 0
+            if len(scope_vars) <= 0:
+                raise AssertionError
 
         # Make sure no parameters have been added or removed
         if hasattr(self, "num_params"):
@@ -151,7 +152,8 @@ class Model(object):
                 print("Got " + str(len(scope_vars)))
                 for var in scope_vars:
                     print("\t" + str(var))
-                assert False
+                if not False:
+                    raise AssertionError
         else:
             self.num_params = len(scope_vars)
 
@@ -238,7 +240,8 @@ class CallableModelWrapper(Model):
         # Do some sanity checking to reduce the chance that probs are used
         # as logits accidentally or vice versa
         if self.output_layer == "probs":
-            assert output.op.type == "Softmax"
+            if output.op.type != "Softmax":
+                raise AssertionError
             min_prob = tf.reduce_min(output)
             max_prob = tf.reduce_max(output)
             asserts = [
@@ -248,7 +251,8 @@ class CallableModelWrapper(Model):
             with tf.control_dependencies(asserts):
                 output = tf.identity(output)
         elif self.output_layer == "logits":
-            assert output.op.type != "Softmax"
+            if output.op.type == "Softmax":
+                raise AssertionError
 
         return {self.output_layer: output}
 

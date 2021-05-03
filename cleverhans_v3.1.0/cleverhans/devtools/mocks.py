@@ -77,7 +77,9 @@ class SimpleDataset(Dataset):
         self.y_test = test_y_rng.randint(low=0, high=nb_classes, size=(test_end, 1))[
             test_start:
         ]
-        assert self.x_train.shape[0] == self.y_train.shape[0]
-        assert self.x_test.shape[0] == self.y_test.shape[0]
+        if self.x_train.shape[0] != self.y_train.shape[0]:
+            raise AssertionError
+        if self.x_test.shape[0] != self.y_test.shape[0]:
+            raise AssertionError
         self.y_train = np_utils.to_categorical(self.y_train, nb_classes)
         self.y_test = np_utils.to_categorical(self.y_test, nb_classes)

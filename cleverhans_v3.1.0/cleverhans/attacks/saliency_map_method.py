@@ -53,7 +53,8 @@ class SaliencyMapMethod(Attack):
         :param kwargs: See `parse_params`
         """
         # Parse and save attack-specific parameters
-        assert self.parse_params(**kwargs)
+        if not self.parse_params(**kwargs):
+            raise AssertionError
 
         if self.symbolic_impl:
             # Create random targets if y_target not provided

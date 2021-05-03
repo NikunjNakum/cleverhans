@@ -76,7 +76,8 @@ def projected_gradient_descent(
     if eps_iter == 0:
         return x
 
-    assert eps_iter <= eps, (eps_iter, eps)
+    if eps_iter > eps:
+        raise AssertionError(eps_iter, eps)
     if clip_min is not None and clip_max is not None:
         if clip_min > clip_max:
             raise ValueError(
@@ -149,5 +150,6 @@ def projected_gradient_descent(
         asserts.append(eps + clip_min <= clip_max)
 
     if sanity_checks:
-        assert np.all(asserts)
+        if not np.all(asserts):
+            raise AssertionError
     return adv_x

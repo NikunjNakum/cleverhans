@@ -96,7 +96,8 @@ def sparse_l1_descent(
         asserts.append(assert_le)
 
     if sanity_checks:
-        assert np.all(asserts)
+        if not np.all(asserts):
+            raise AssertionError
 
     # Initialize loop variables
     if rand_init:

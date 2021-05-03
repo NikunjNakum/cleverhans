@@ -93,7 +93,8 @@ def single_run_max_confidence_recipe(
     pgd_params = copy.copy(threat_params)
     pgd_params["eps_iter"] = eps_iter
     pgd_params["nb_iter"] = nb_iter
-    assert batch_size % num_devices == 0
+    if batch_size % num_devices != 0:
+        raise AssertionError
     dev_batch_size = batch_size // num_devices
     ones = tf.ones(dev_batch_size, tf.int32)
     expensive_pgd = []
@@ -176,7 +177,8 @@ def basic_max_confidence_recipe(
     pgd_params = copy.copy(threat_params)
     pgd_params["eps_iter"] = eps_iter
     pgd_params["nb_iter"] = nb_iter
-    assert batch_size % num_devices == 0
+    if batch_size % num_devices != 0:
+        raise AssertionError
     dev_batch_size = batch_size // num_devices
     ones = tf.ones(dev_batch_size, tf.int32)
     expensive_pgd = []
@@ -262,7 +264,8 @@ def fixed_max_confidence_recipe(
     pgd_params = copy.copy(threat_params)
     pgd_params["eps_iter"] = eps_iter
     pgd_params["nb_iter"] = nb_iter
-    assert batch_size % num_devices == 0
+    if batch_size % num_devices != 0:
+        raise AssertionError
     dev_batch_size = batch_size // num_devices
     ones = tf.ones(dev_batch_size, tf.int32)
     if eps_iter_small is None:
@@ -337,7 +340,8 @@ def random_search_max_confidence_recipe(
     threat_params = {"eps": eps, "clip_min": clip_min, "clip_max": clip_max}
     noise_attack_config = AttackConfig(noise_attack, threat_params)
     attack_configs = [noise_attack_config]
-    assert batch_size % num_devices == 0
+    if batch_size % num_devices != 0:
+        raise AssertionError
     new_work_goal = {noise_attack_config: num_noise_points}
     goals = [MaxConfidence(t=1.0, new_work_goal=new_work_goal)]
     bundle_attacks(sess, model, x, y, attack_configs, goals, report_path)
@@ -357,9 +361,11 @@ class AttackConfig(object):
         self.params = params
         self.name = name
         if params is not None:
-            assert isinstance(params, dict)
+            if not isinstance(params, dict):
+                raise AssertionError
             for key in params:
-                assert isinstance(key, six.string_types), type(key)
+                if not isinstance(key, six.string_types):
+                    raise AssertionError(type(key))
         self.pass_y = pass_y
 
     def __str__(self):
@@ -406,13 +412,18 @@ def bundle_attacks(
       run_counts: dict mapping each AttackConfig to a numpy array reporting
         how many times that AttackConfig was run on each example
     """
-    assert isinstance(sess, tf.Session)
-    assert isinstance(model, Model)
-    assert all(
+    if not isinstance(sess, tf.Session):
+        raise AssertionError
+    if not isinstance(model, Model):
+        raise AssertionError
+    if not all(
         isinstance(attack_config, AttackConfig) for attack_config in attack_configs
-    )
-    assert all(isinstance(goal, AttackGoal) for goal in goals)
-    assert isinstance(report_path, six.string_types)
+    ):
+        raise AssertionError
+    if not all(isinstance(goal, AttackGoal) for goal in goals):
+        raise AssertionError
+    if not isinstance(report_path, six.string_types):
+        raise AssertionError
     if x.shape[0] != y.shape[0]:
         raise ValueError("Number of input examples does not match number of labels")
 
@@ -496,9 +507,11 @@ def bundle_attacks_with_goal(
     goal.start(run_counts)
     _logger.info("Running criteria for new goal...")
     criteria = goal.get_criteria(sess, model, adv_x, y, batch_size=eval_batch_size)
-    assert "correctness" in criteria
+    if "correctness" not in criteria:
+        raise AssertionError
     _logger.info("Accuracy: " + str(criteria["correctness"].mean()))
-    assert "confidence" in criteria
+    if "confidence" not in criteria:
+        raise AssertionError
     while not goal.is_satisfied(criteria, run_counts):
         run_batch_with_goal(
             sess,
@@ -558,9 +571,11 @@ def run_batch_with_goal(
     attack_config = goal.get_attack_config(attack_configs, run_counts, criteria)
     idxs = goal.request_examples(attack_config, criteria, run_counts, attack_batch_size)
     x_batch = x[idxs]
-    assert x_batch.shape[0] == attack_batch_size
+    if x_batch.shape[0] != attack_batch_size:
+        raise AssertionError
     y_batch = y[idxs]
-    assert y_batch.shape[0] == attack_batch_size
+    if y_batch.shape[0] != attack_batch_size:
+        raise AssertionError
     adv_x_batch = run_attack(
         sess,
         model,
@@ -585,7 +600,8 @@ def run_batch_with_goal(
             adv_x_val[orig_idx] = adv_x_batch[batch_idx]
             for key in criteria:
                 criteria[key][orig_idx] = criteria_batch[key][batch_idx]
-            assert np.allclose(y[orig_idx], y_batch[batch_idx])
+            if not np.allclose(y[orig_idx], y_batch[batch_idx]):
+                raise AssertionError
     report["bundled"] = ConfidenceReportEntry(
         criteria["correctness"], criteria["confidence"]
     )
@@ -616,7 +632,8 @@ def save(criteria, report, report_path, adv_x_val):
     print("Saving to " + report_path)
     serial.save(report_path, report)
 
-    assert report_path.endswith(".joblib")
+    if not report_path.endswith(".joblib"):
+        raise AssertionError
     adv_x_path = report_path[: -len(".joblib")] + "_adv.npy"
     np.save(adv_x_path, adv_x_val)
 
@@ -749,22 +766,27 @@ class Misclassify(AttackGoal):
     def __init__(self, new_work_goal=None, break_ties="wrong_confidence"):
         super(Misclassify, self).__init__()
         self.new_work_goal = new_work_goal
-        assert all(isinstance(key, AttackConfig) for key in new_work_goal.keys())
-        assert all(isinstance(value, int) for value in new_work_goal.values())
+        if not all(isinstance(key, AttackConfig) for key in new_work_goal.keys()):
+            raise AssertionError
+        if not all(isinstance(value, int) for value in new_work_goal.values()):
+            raise AssertionError
         self.rng = np.random.RandomState([2018, 10, 5, 9])
         self.break_ties = break_ties
 
     def start(self, run_counts):
         for key in run_counts:
             value = run_counts[key]
-            assert value.ndim == 1
+            if value.ndim != 1:
+                raise AssertionError
         _logger.info("Started working on a Misclassify goal")
         self.work_before = deep_copy(run_counts)
 
     def is_satisfied(self, criteria, run_counts):
         correctness = criteria["correctness"]
-        assert correctness.dtype == np.bool
-        assert correctness.ndim == 1
+        if correctness.dtype != np.bool:
+            raise AssertionError
+        if correctness.ndim != 1:
+            raise AssertionError
         if correctness.max() == 0:
             _logger.info("Everything is misclassified! Done with Misclassify goal")
             return True
@@ -817,7 +839,8 @@ class Misclassify(AttackGoal):
         Return run counts only for examples that are still correctly classified
         """
         correctness = criteria["correctness"]
-        assert correctness.dtype == np.bool
+        if correctness.dtype != np.bool:
+            raise AssertionError
         filtered_counts = deep_copy(run_counts)
         for key in filtered_counts:
             filtered_counts[key] = filtered_counts[key][correctness]
@@ -841,14 +864,16 @@ class Misclassify(AttackGoal):
 
     def request_examples(self, attack_config, criteria, run_counts, batch_size):
         correctness = criteria["correctness"]
-        assert correctness.dtype == np.bool
+        if correctness.dtype != np.bool:
+            raise AssertionError
         total = correctness.size
         total_correct = correctness.sum()
         all_idxs = np.arange(total)
         run_counts = run_counts[attack_config]
         if total_correct > 0:
             correct_idxs = all_idxs[correctness]
-            assert correct_idxs.size == total_correct
+            if correct_idxs.size != total_correct:
+                raise AssertionError
             run_counts = run_counts[correctness]
             pairs = safe_zip(correct_idxs, run_counts)
         else:
@@ -877,7 +902,8 @@ class Misclassify(AttackGoal):
             return True
         if (not orig_correct) and new_correct:
             return False
-        assert orig_correct == new_correct
+        if orig_correct != new_correct:
+            raise AssertionError
         if self.break_ties == "wrong_confidence":
             new = new_criteria["wrong_confidence"][new_idx]
             orig = orig_criteria["wrong_confidence"][orig_idx]
@@ -918,8 +944,10 @@ class MaxConfidence(AttackGoal):
         self.new_work_goal = new_work_goal
         if new_work_goal is not None:
             for key in new_work_goal:
-                assert isinstance(key, AttackConfig)
-                assert isinstance(new_work_goal[key], int)
+                if not isinstance(key, AttackConfig):
+                    raise AssertionError
+                if not isinstance(new_work_goal[key], int):
+                    raise AssertionError
         self.rng = np.random.RandomState([2018, 10, 7, 12])
 
     def filter(self, run_counts, criteria):
@@ -1018,14 +1046,16 @@ class MaxConfidence(AttackGoal):
     def request_examples(self, attack_config, criteria, run_counts, batch_size):
         wrong_confidence = criteria["wrong_confidence"]
         below_t = wrong_confidence <= self.t
-        assert below_t.dtype == np.bool
+        if below_t.dtype != np.bool:
+            raise AssertionError
         total = below_t.size
         total_below = below_t.sum()
         all_idxs = np.arange(total)
         run_counts = run_counts[attack_config]
         if total_below > 0:
             correct_idxs = all_idxs[below_t]
-            assert correct_idxs.size == total_below
+            if correct_idxs.size != total_below:
+                raise AssertionError
             run_counts = run_counts[below_t]
             pairs = safe_zip(correct_idxs, run_counts)
         else:
@@ -1063,13 +1093,16 @@ def unfinished_attack_configs(new_work_goal, work_before, run_counts, log=False)
       already meet the primary goal
     """
 
-    assert isinstance(work_before, dict), work_before
+    if not isinstance(work_before, dict):
+        raise AssertionError(work_before)
 
     for key in work_before:
         value = work_before[key]
-        assert value.ndim == 1, value.shape
+        if value.ndim != 1:
+            raise AssertionError(value.shape)
         if key in run_counts:
-            assert run_counts[key].shape == value.shape
+            if run_counts[key].shape != value.shape:
+                raise AssertionError
 
     attack_configs = []
     for attack_config in new_work_goal:
@@ -1086,9 +1119,11 @@ def unfinished_attack_configs(new_work_goal, work_before, run_counts, log=False)
         new = done_now - done_before
         # The work is only done when it has been done for every example
         new = new.min()
-        assert isinstance(new, (int, np.int64)), type(new)
+        if not isinstance(new, (int, np.int64)):
+            raise AssertionError(type(new))
         new_goal = new_work_goal[attack_config]
-        assert isinstance(new_goal, int), type(new_goal)
+        if not isinstance(new_goal, int):
+            raise AssertionError(type(new_goal))
         if new < new_goal:
             if log:
                 _logger.info(
@@ -1196,10 +1231,13 @@ def bundle_examples_with_goal(
 
     # Check the input
     num_attacks = len(adv_x_list)
-    assert num_attacks > 0
+    if num_attacks <= 0:
+        raise AssertionError
     adv_x_0 = adv_x_list[0]
-    assert isinstance(adv_x_0, np.ndarray)
-    assert all(adv_x.shape == adv_x_0.shape for adv_x in adv_x_list)
+    if not isinstance(adv_x_0, np.ndarray):
+        raise AssertionError
+    if not all(adv_x.shape == adv_x_0.shape for adv_x in adv_x_list):
+        raise AssertionError
 
     # Allocate the output
     out = np.zeros_like(adv_x_0)
@@ -1214,8 +1252,10 @@ def bundle_examples_with_goal(
         goal.get_criteria(sess, model, adv_x, y, batch_size=batch_size)
         for adv_x in adv_x_list
     ]
-    assert all("correctness" in c for c in criteria)
-    assert all("confidence" in c for c in criteria)
+    if not all("correctness" in c for c in criteria):
+        raise AssertionError
+    if not all("confidence" in c for c in criteria):
+        raise AssertionError
     _logger.info("Accuracy on each advx dataset: ")
     for c in criteria:
         _logger.info("\t" + str(c["correctness"].mean()))
@@ -1234,17 +1274,22 @@ def bundle_examples_with_goal(
         correctness[example_idx] = criteria[attack_idx]["correctness"][example_idx]
         confidence[example_idx] = criteria[attack_idx]["confidence"][example_idx]
 
-    assert correctness.min() >= 0
-    assert correctness.max() <= 1
-    assert confidence.min() >= 0.0
-    assert confidence.max() <= 1.0
+    if correctness.min() < 0:
+        raise AssertionError
+    if correctness.max() > 1:
+        raise AssertionError
+    if confidence.min() < 0.0:
+        raise AssertionError
+    if confidence.max() > 1.0:
+        raise AssertionError
     correctness = correctness.astype("bool")
     _logger.info("Accuracy on bundled examples: " + str(correctness.mean()))
 
     report = ConfidenceReport()
     report["bundled"] = ConfidenceReportEntry(correctness, confidence)
     serial.save(report_path, report)
-    assert report_path.endswith(".joblib")
+    if not report_path.endswith(".joblib"):
+        raise AssertionError
     adv_x_path = report_path[: -len(".joblib")] + "_adv_x.npy"
     np.save(adv_x_path, out)
 

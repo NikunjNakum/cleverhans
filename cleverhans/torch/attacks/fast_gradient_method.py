@@ -99,5 +99,6 @@ def fast_gradient_method(
         adv_x = torch.clamp(adv_x, clip_min, clip_max)
 
     if sanity_checks:
-        assert np.all(asserts)
+        if not np.all(asserts):
+            raise AssertionError
     return adv_x

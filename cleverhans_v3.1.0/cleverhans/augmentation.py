@@ -19,8 +19,10 @@ random_horizontal_flip = tf.image.random_flip_left_right
 def random_shift(x, pad=(4, 4), mode="REFLECT"):
     """Pad a single image and then crop to the original size with a random
     offset."""
-    assert mode in "REFLECT SYMMETRIC CONSTANT".split()
-    assert x.get_shape().ndims == 3
+    if mode not in "REFLECT SYMMETRIC CONSTANT".split():
+        raise AssertionError
+    if x.get_shape().ndims != 3:
+        raise AssertionError
     xp = tf.pad(x, [[pad[0], pad[0]], [pad[1], pad[1]], [0, 0]], mode)
     return tf.random_crop(xp, tf.shape(x))
 

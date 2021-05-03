@@ -33,7 +33,8 @@ class Loss(object):
         :param hparams: dict, hyper-parameters for the loss.
         :param attack: cleverhans.attacks.Attack instance
         """
-        assert isinstance(model, Model)
+        if not isinstance(model, Model):
+            raise AssertionError
         standard = attack is None or isinstance(attack, Attack)
         deprecated = callable(attack)
         if not standard and not deprecated:
@@ -102,7 +103,8 @@ class WeightedSum(Loss):
             if isinstance(weight, float):
                 continue
             if hasattr(weight, "ndim"):
-                assert weight.ndim == 0
+                if weight.ndim != 0:
+                    raise AssertionError
                 continue
             raise TypeError(
                 "weight of %s is not a type that this function "
@@ -167,7 +169,8 @@ class CrossEntropy(Loss):
         else:
             x = tuple([x])
             coeffs = [1.0]
-        assert np.allclose(sum(coeffs), 1.0)
+        if not np.allclose(sum(coeffs), 1.0):
+            raise AssertionError
 
         # Catching RuntimeError: Variable -= value not supported by tf.eager.
         try:
@@ -251,7 +254,8 @@ class WeightDecay(Loss):
             if len(param.get_shape()) > 1
         ]
         out = tf.add_n(terms)
-        assert len(out.get_shape()) == 0
+        if len(out.get_shape()) != 0:
+            raise AssertionError
         return out
 
 

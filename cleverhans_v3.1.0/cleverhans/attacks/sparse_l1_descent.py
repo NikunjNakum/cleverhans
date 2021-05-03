@@ -62,7 +62,8 @@ class SparseL1Descent(Attack):
         :param kwargs: See `parse_params`
         """
         # Parse and save attack-specific parameters
-        assert self.parse_params(**kwargs)
+        if not self.parse_params(**kwargs):
+            raise AssertionError
 
         asserts = []
 
@@ -226,7 +227,8 @@ class SparseL1Descent(Attack):
         if isinstance(eps, float) and isinstance(eps_iter, float):
             # If these are both known at compile time, we can check before anything
             # is run. If they are tf, we can't check them yet.
-            assert eps_iter <= eps, (eps_iter, eps)
+            if eps_iter > eps:
+                raise AssertionError(eps_iter, eps)
 
         if self.y is not None and self.y_target is not None:
             raise ValueError("Must not set both y and y_target")
@@ -304,7 +306,8 @@ def sparse_l1_descent(
         asserts.append(utils_tf.assert_less_equal(x, tf.cast(clip_max, x.dtype)))
 
     # Make sure the caller has not passed probs by accident
-    assert logits.op.type != "Softmax"
+    if logits.op.type == "Softmax":
+        raise AssertionError
 
     if y is None:
         # Using model predictions as ground truth to avoid label leaking
@@ -355,7 +358,8 @@ def sparse_l1_descent(
     # If clipping is needed, reset all values outside of [clip_min, clip_max]
     if (clip_min is not None) or (clip_max is not None):
         # We don't currently support one-sided clipping
-        assert clip_min is not None and clip_max is not None
+        if not (clip_min is not None and clip_max is not None):
+            raise AssertionError
         adv_x = utils_tf.clip_by_value(adv_x, clip_min, clip_max)
 
     if sanity_checks:

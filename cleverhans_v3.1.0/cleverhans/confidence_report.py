@@ -74,7 +74,8 @@ class ConfidenceReport(OrderedDict):
                 self[key] = value
 
     def __setitem__(self, key, value):
-        assert isinstance(key, six.string_types)
+        if not isinstance(key, six.string_types):
+            raise AssertionError
         if not isinstance(value, ConfidenceReportEntry):
             raise TypeError(
                 "`value` must be a ConfidenceReportEntry, but got "
@@ -97,15 +98,24 @@ class ConfidenceReportEntry(object):
     """
 
     def __init__(self, correctness, confidence):
-        assert isinstance(correctness, np.ndarray)
-        assert isinstance(correctness, np.ndarray)
-        assert correctness.ndim == 1
-        assert confidence.ndim == 1
-        assert correctness.dtype == np.bool, correctness.dtype
-        assert np.issubdtype(confidence.dtype, np.floating)
-        assert correctness.shape == confidence.shape
-        assert confidence.min() >= 0.0
-        assert confidence.max() <= 1.0
+        if not isinstance(correctness, np.ndarray):
+            raise AssertionError
+        if not isinstance(correctness, np.ndarray):
+            raise AssertionError
+        if correctness.ndim != 1:
+            raise AssertionError
+        if confidence.ndim != 1:
+            raise AssertionError
+        if correctness.dtype != np.bool:
+            raise AssertionError(correctness.dtype)
+        if not np.issubdtype(confidence.dtype, np.floating):
+            raise AssertionError
+        if correctness.shape != confidence.shape:
+            raise AssertionError
+        if confidence.min() < 0.0:
+            raise AssertionError
+        if confidence.max() > 1.0:
+            raise AssertionError
         self.correctness = correctness
         self.confidence = confidence
 
@@ -117,7 +127,8 @@ class ConfidenceReportEntry(object):
             "Dictionary-style access will be removed on or after "
             "2019-04-24."
         )
-        assert key in ["correctness", "confidence"]
+        if key not in ["correctness", "confidence"]:
+            raise AssertionError
         return self.__dict__[key]
 
     def __setitem__(self, key, value):
@@ -128,7 +139,8 @@ class ConfidenceReportEntry(object):
             "Dictionary-style access will be removed on or after "
             "2019-04-24."
         )
-        assert key in ["correctness", "confidence"]
+        if key not in ["correctness", "confidence"]:
+            raise AssertionError
         self.__dict__[key] = value
 
 
@@ -182,13 +194,15 @@ def make_confidence_report_bundled(
     # Create TF session
     sess = tf.Session()
 
-    assert filepath.endswith(".joblib")
+    if not filepath.endswith(".joblib"):
+        raise AssertionError
     if report_path is None:
         report_path = filepath[: -len(".joblib")] + "_bundled_report.joblib"
 
     with sess.as_default():
         model = load(filepath)
-    assert len(model.get_params()) > 0
+    if len(model.get_params()) <= 0:
+        raise AssertionError
     factory = model.dataset_factory
     factory.kwargs["train_start"] = train_start
     factory.kwargs["train_end"] = train_end
@@ -236,11 +250,15 @@ def make_confidence_report_bundled(
     clip_max = max_value
 
     x_data, y_data = dataset.get_set(which_set)
-    assert x_data.max() <= max_value
-    assert x_data.min() >= min_value
+    if x_data.max() > max_value:
+        raise AssertionError
+    if x_data.min() < min_value:
+        raise AssertionError
 
-    assert eps_iter <= eps
-    assert eps_iter_small is None or eps_iter_small <= eps
+    if eps_iter > eps:
+        raise AssertionError
+    if not (eps_iter_small is None or eps_iter_small <= eps):
+        raise AssertionError
 
     # Different recipes take different arguments.
     # For now I don't have an idea for a beautiful unifying framework, so
@@ -290,7 +308,8 @@ def print_stats(correctness, confidence, name):
     wrongness = 1 - correctness
     denom1 = np.maximum(1, wrongness.sum())
     ave_prob_on_mistake = (wrongness * confidence).sum() / denom1
-    assert ave_prob_on_mistake <= 1.0, ave_prob_on_mistake
+    if ave_prob_on_mistake > 1.0:
+        raise AssertionError(ave_prob_on_mistake)
     denom2 = np.maximum(1, correctness.sum())
     ave_prob_on_correct = (correctness * confidence).sum() / denom2
     covered = confidence > 0.5
@@ -361,12 +380,14 @@ def make_confidence_report(
     sess = tf.Session()
 
     if report_path is None:
-        assert filepath.endswith(".joblib")
+        if not filepath.endswith(".joblib"):
+            raise AssertionError
         report_path = filepath[: -len(".joblib")] + "_report.joblib"
 
     with sess.as_default():
         model = load(filepath)
-    assert len(model.get_params()) > 0
+    if len(model.get_params()) <= 0:
+        raise AssertionError
     factory = model.dataset_factory
     factory.kwargs["train_start"] = train_start
     factory.kwargs["train_end"] = train_end
@@ -422,7 +443,8 @@ def make_confidence_report(
             # time and discarded
 
             # The path to save to
-            assert report_path.endswith(".joblib")
+            if not report_path.endswith(".joblib"):
+                raise AssertionError
             advx_path = report_path[: -len(".joblib")] + "_advx_" + name + ".npy"
 
             # Fetch the adversarial examples
