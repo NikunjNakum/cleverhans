@@ -48,7 +48,8 @@ class VirtualAdversarialMethod(Attack):
         :param kwargs: See `parse_params`
         """
         # Parse and save attack-specific parameters
-        assert self.parse_params(**kwargs)
+        if not self.parse_params(**kwargs):
+            raise AssertionError
 
         return vatm(
             self.model,
@@ -94,7 +95,8 @@ class VirtualAdversarialMethod(Attack):
             )
             # Note: when we remove the deprecated alias, we can put the default
             # value of 1 for nb_iter back in the method signature
-            assert nb_iter is None
+            if nb_iter is not None:
+                raise AssertionError
             nb_iter = num_iterations
         del num_iterations
         if nb_iter is None:

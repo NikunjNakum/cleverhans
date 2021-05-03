@@ -96,7 +96,8 @@ class SPSAAdam(tf.optimizers.Adam):
         compare_to_analytic_grad=False,
     ):
         super(SPSAAdam, self).__init__(lr=lr)
-        assert num_samples % 2 == 0, "number of samples must be even"
+        if num_samples % 2 != 0:
+            raise AssertionError("number of samples must be even")
         self._delta = delta
         self._num_samples = num_samples // 2  # Since we mirror +/- delta later
         self._num_iters = num_iters
@@ -130,11 +131,13 @@ class SPSAAdam(tf.optimizers.Adam):
 
         # Assumes `x` is a list, containing a [1, H, W, C] image.If static batch dimension is None,
         # tf.reshape to batch size 1 so that static shape can be inferred.
-        assert len(x) == 1
+        if len(x) != 1:
+            raise AssertionError
         static_x_shape = x[0].get_shape().as_list()
         if static_x_shape[0] is None:
             x[0] = tf.reshape(x[0], [1] + static_x_shape[1:])
-        assert x[0].get_shape().as_list()[0] == 1
+        if x[0].get_shape().as_list()[0] != 1:
+            raise AssertionError
         x = x[0]
         x_shape = x.get_shape().as_list()
 
@@ -328,7 +331,8 @@ def projected_optimization(
     function which you can use to write your own attack methods. The method uses a tf.while_loop to
     optimize a loss function in a single sess.run() call.
     """
-    assert num_steps is not None
+    if num_steps is None:
+        raise AssertionError
     if is_debug:
         with tf.device("/cpu:0"):
             tf.print("Starting PGD attack with epsilon: %s" % epsilon)

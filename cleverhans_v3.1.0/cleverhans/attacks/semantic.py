@@ -32,7 +32,8 @@ class Semantic(Attack):
         self.max_val = max_val
         if hasattr(model, "dataset_factory"):
             if "center" in model.dataset_factory.kwargs:
-                assert center == model.dataset_factory.kwargs["center"]
+                if center != model.dataset_factory.kwargs["center"]:
+                    raise AssertionError
 
     def generate(self, x, **kwargs):
         if self.center:

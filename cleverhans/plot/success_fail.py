@@ -92,7 +92,8 @@ def plot_report(
         fail_upper_bound,
         success_bounded,
     ) = make_curve(report, success_name, fail_names)
-    assert len(fail_lower_bound) == len(fail_upper_bound)
+    if len(fail_lower_bound) != len(fail_upper_bound):
+        raise AssertionError
     fail_optimal = np.array(fail_optimal)
     fail_lower_bound = np.array(fail_lower_bound)
     fail_upper_bound = np.array(fail_upper_bound)
@@ -121,7 +122,8 @@ def plot_report(
     pyplot.ylabel("Success rate on clean examples")
     gap = fail_upper_bound - fail_lower_bound
     if gap.size > 0:
-        assert gap.min() >= 0.0
+        if gap.min() < 0.0:
+            raise AssertionError
         print("Max gap: ", gap.max())
 
 

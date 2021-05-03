@@ -47,7 +47,8 @@ class MaxConfidence(Attack):
         :param kwargs: Keyword arguments for the base attacker
         """
 
-        assert self.parse_params(**kwargs)
+        if not self.parse_params(**kwargs):
+            raise AssertionError
         labels, _nb_classes = self.get_or_guess_labels(x, kwargs)
         adv_x = self.attack(x, labels)
 

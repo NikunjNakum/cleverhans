@@ -42,14 +42,16 @@ class Noise(Attack):
         :param kwargs: See `parse_params`
         """
         # Parse and save attack-specific parameters
-        assert self.parse_params(**kwargs)
+        if not self.parse_params(**kwargs):
+            raise AssertionError
 
         if self.ord != np.inf:
             raise NotImplementedError(self.ord)
         eta = tf.random_uniform(tf.shape(x), -self.eps, self.eps, dtype=self.tf_dtype)
         adv_x = x + eta
         if self.clip_min is not None or self.clip_max is not None:
-            assert self.clip_min is not None and self.clip_max is not None
+            if not (self.clip_min is not None and self.clip_max is not None):
+                raise AssertionError
             adv_x = tf.clip_by_value(adv_x, self.clip_min, self.clip_max)
 
         return adv_x

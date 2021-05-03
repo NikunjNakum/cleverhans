@@ -122,7 +122,8 @@ class FastGradientMethod(Attack, attacks.FastGradientMethod):
         :param clip_max: (optional float) Maximum input component value
         """
         # Parse and save attack-specific parameters
-        assert self.parse_params(**kwargs)
+        if not self.parse_params(**kwargs):
+            raise AssertionError
         labels, _nb_classes = self.get_or_guess_labels(x, kwargs)
         return self.fgm(x, labels=labels, targeted=(self.y_target is not None))
 

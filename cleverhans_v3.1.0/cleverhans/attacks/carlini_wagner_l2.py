@@ -70,9 +70,10 @@ class CarliniWagnerL2(Attack):
         :param x: A tensor with the inputs.
         :param kwargs: See `parse_params`
         """
-        assert (
-            self.sess is not None
-        ), "Cannot use `generate` when no `sess` was provided"
+        if (
+            self.sess is None
+        ):
+            raise AssertionError("Cannot use `generate` when no `sess` was provided")
         self.parse_params(**kwargs)
 
         labels, nb_classes = self.get_or_guess_labels(x, kwargs)

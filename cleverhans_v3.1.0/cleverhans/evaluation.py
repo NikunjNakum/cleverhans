@@ -129,8 +129,10 @@ def class_and_confidence(
 
     classes, confidence = out
 
-    assert classes.shape == (x.shape[0],)
-    assert confidence.shape == (x.shape[0],)
+    if classes.shape != (x.shape[0],):
+        raise AssertionError
+    if confidence.shape != (x.shape[0],):
+        raise AssertionError
     min_confidence = confidence.min()
     if min_confidence < 0.0:
         raise ValueError(
@@ -141,7 +143,8 @@ def class_and_confidence(
         raise ValueError(
             "Model does not return valid probablities: " + str(max_confidence)
         )
-    assert confidence.min() >= 0.0, confidence.min()
+    if confidence.min() < 0.0:
+        raise AssertionError(confidence.min())
 
     return out
 
@@ -202,8 +205,10 @@ def correctness_and_confidence(
 
     correctness, confidence = out
 
-    assert correctness.shape == (x.shape[0],)
-    assert confidence.shape == (x.shape[0],)
+    if correctness.shape != (x.shape[0],):
+        raise AssertionError
+    if confidence.shape != (x.shape[0],):
+        raise AssertionError
     min_confidence = confidence.min()
     if min_confidence < 0.0:
         raise ValueError(
@@ -214,7 +219,8 @@ def correctness_and_confidence(
         raise ValueError(
             "Model does not return valid probablities: " + str(max_confidence)
         )
-    assert confidence.min() >= 0.0, confidence.min()
+    if confidence.min() < 0.0:
+        raise AssertionError(confidence.min())
 
     return out
 
@@ -334,7 +340,8 @@ def batch_eval_multi_worker(
         batch_size = len(devices) * DEFAULT_EXAMPLES_PER_DEVICE
 
     n = len(numpy_inputs)
-    assert n > 0
+    if n <= 0:
+        raise AssertionError
     m = numpy_inputs[0].shape[0]
     for i in range(1, n):
         m_i = numpy_inputs[i].shape[0]
@@ -355,7 +362,8 @@ def batch_eval_multi_worker(
     p = None
 
     num_devices = len(devices)
-    assert batch_size % num_devices == 0
+    if batch_size % num_devices != 0:
+        raise AssertionError
     device_batch_size = batch_size // num_devices
 
     cache_key = (graph_factory, tuple(devices))
@@ -365,7 +373,8 @@ def batch_eval_multi_worker(
         packed = _batch_eval_multi_worker_cache[cache_key]
         replicated_tf_inputs, replicated_tf_outputs = packed
         p = len(replicated_tf_outputs[0])
-        assert p > 0
+        if p <= 0:
+            raise AssertionError
     else:
         # This graph has not been built before.
         # Build it now.
@@ -373,12 +382,15 @@ def batch_eval_multi_worker(
         for device in devices:
             with tf.device(device):
                 tf_inputs, tf_outputs = graph_factory()
-                assert len(tf_inputs) == n
+                if len(tf_inputs) != n:
+                    raise AssertionError
                 if p is None:
                     p = len(tf_outputs)
-                    assert p > 0
+                    if p <= 0:
+                        raise AssertionError
                 else:
-                    assert len(tf_outputs) == p
+                    if len(tf_outputs) != p:
+                        raise AssertionError
                 replicated_tf_inputs.append(tf_inputs)
                 replicated_tf_outputs.append(tf_outputs)
         del tf_inputs
@@ -432,35 +444,42 @@ def batch_eval_multi_worker(
                 dev_start = dev_idx * device_batch_size
                 dev_end = (dev_idx + 1) * device_batch_size
                 value = numpy_input[dev_start:dev_end]
-                assert value.shape[0] == device_batch_size
+                if value.shape[0] != device_batch_size:
+                    raise AssertionError
                 feed_dict[tf_input] = value
         if feed is not None:
             feed_dict.update(feed)
         flat_output_batches = sess.run(flat_tf_outputs, feed_dict=feed_dict)
         for e in flat_output_batches:
-            assert e.shape[0] == device_batch_size, e.shape
+            if e.shape[0] != device_batch_size:
+                raise AssertionError(e.shape)
 
         output_batches = []
         for output in range(p):
             o_start = output * num_devices
             o_end = (output + 1) * num_devices
             device_values = flat_output_batches[o_start:o_end]
-            assert len(device_values) == num_devices
+            if len(device_values) != num_devices:
+                raise AssertionError
             output_batches.append(device_values)
 
         for out_elem, device_values in zip(out, output_batches):
-            assert len(device_values) == num_devices, (len(device_values), num_devices)
+            if len(device_values) != num_devices:
+                raise AssertionError(len(device_values), num_devices)
             for device_value in device_values:
-                assert device_value.shape[0] == device_batch_size
+                if device_value.shape[0] != device_batch_size:
+                    raise AssertionError
             out_elem.extend(device_values)
 
     out = [np.concatenate(x, axis=0) for x in out]
     for e in out:
-        assert e.shape[0] == m, e.shape
+        if e.shape[0] != m:
+            raise AssertionError(e.shape)
 
     # Trim off the examples we used to pad up to batch size
     out = [e[:orig_m] for e in out]
-    assert len(out) == p, (len(out), p)
+    if len(out) != p:
+        raise AssertionError(len(out), p)
 
     return out
 
@@ -499,18 +518,22 @@ def batch_eval(
             "after 2019-03-09. Pass `batch_size` directly."
         )
         if "batch_size" in args:
-            assert batch_size is None
+            if batch_size is not None:
+                raise AssertionError
             batch_size = args["batch_size"]
 
     if batch_size is None:
         batch_size = DEFAULT_EXAMPLES_PER_DEVICE
 
     n = len(numpy_inputs)
-    assert n > 0
-    assert n == len(tf_inputs)
+    if n <= 0:
+        raise AssertionError
+    if n != len(tf_inputs):
+        raise AssertionError
     m = numpy_inputs[0].shape[0]
     for i in range(1, n):
-        assert numpy_inputs[i].shape[0] == m
+        if numpy_inputs[i].shape[0] != m:
+            raise AssertionError
     out = []
     for _ in tf_outputs:
         out.append([])
@@ -524,22 +547,26 @@ def batch_eval(
         end = start + batch_size
         numpy_input_batches = [numpy_input[start:end] for numpy_input in numpy_inputs]
         cur_batch_size = numpy_input_batches[0].shape[0]
-        assert cur_batch_size <= batch_size
+        if cur_batch_size > batch_size:
+            raise AssertionError
         for e in numpy_input_batches:
-            assert e.shape[0] == cur_batch_size
+            if e.shape[0] != cur_batch_size:
+                raise AssertionError
 
         feed_dict = dict(zip(tf_inputs, numpy_input_batches))
         if feed is not None:
             feed_dict.update(feed)
         numpy_output_batches = sess.run(tf_outputs, feed_dict=feed_dict)
         for e in numpy_output_batches:
-            assert e.shape[0] == cur_batch_size, e.shape
+            if e.shape[0] != cur_batch_size:
+                raise AssertionError(e.shape)
         for out_elem, numpy_output_batch in zip(out, numpy_output_batches):
             out_elem.append(numpy_output_batch)
 
     out = [np.concatenate(x, axis=0) for x in out]
     for e in out:
-        assert e.shape[0] == m, e.shape
+        if e.shape[0] != m:
+            raise AssertionError(e.shape)
     return out
 
 
@@ -717,7 +744,8 @@ class _AttackFactory(object):
     """
 
     def __init__(self, model, attack, attack_params=None, pass_y=False):
-        assert isinstance(model, cleverhans.model.Model)
+        if not isinstance(model, cleverhans.model.Model):
+            raise AssertionError
         if not isinstance(attack, cleverhans.attacks.Attack):
             raise TypeError(
                 "`attack` must be an instance of cleverhans.attacks."

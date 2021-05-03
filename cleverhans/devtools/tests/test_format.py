@@ -95,7 +95,8 @@ def test_format_pep8():
             files_to_check.append(path)
     repo_dir = os.path.join(module_dir, os.pardir)
     rcpath = os.path.join(repo_dir, ".pylintrc")
-    assert os.path.exists(rcpath)
+    if not os.path.exists(rcpath):
+        raise AssertionError
 
     # We must run pylint via the command line and subprocess because of
     # problems with the pylint module.

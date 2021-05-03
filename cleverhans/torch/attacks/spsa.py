@@ -163,7 +163,8 @@ def spsa(
     asserts.append(torch.all(adv_x <= clip_max))
 
     if sanity_checks:
-        assert np.all(asserts)
+        if not np.all(asserts):
+            raise AssertionError
 
     return adv_x
 
@@ -190,7 +191,8 @@ def _compute_spsa_gradient(loss_fn, x, delta, samples, iters):
     of `samples` size each.
     """
 
-    assert len(x) == 1
+    if len(x) != 1:
+        raise AssertionError
     num_dims = len(x.size())
 
     x_batch = x.expand(samples, *([-1] * (num_dims - 1)))

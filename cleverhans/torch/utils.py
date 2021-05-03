@@ -100,7 +100,8 @@ def optimize_linear(grad, eps, norm=np.inf):
         # TODO integrate below to a test file
         # check that the optimal perturbations have been correctly computed
         opt_pert_norm = optimal_perturbation.abs().sum(dim=red_ind)
-        assert torch.all(opt_pert_norm == torch.ones_like(opt_pert_norm))
+        if not torch.all(opt_pert_norm == torch.ones_like(opt_pert_norm)):
+            raise AssertionError
     elif norm == 2:
         square = torch.max(avoid_zero_div, torch.sum(grad ** 2, red_ind, keepdim=True))
         optimal_perturbation = grad / torch.sqrt(square)
@@ -112,7 +113,8 @@ def optimize_linear(grad, eps, norm=np.inf):
         one_mask = (square <= avoid_zero_div).to(torch.float) * opt_pert_norm + (
             square > avoid_zero_div
         ).to(torch.float)
-        assert torch.allclose(opt_pert_norm, one_mask, rtol=1e-05, atol=1e-08)
+        if not torch.allclose(opt_pert_norm, one_mask, rtol=1e-05, atol=1e-08):
+            raise AssertionError
     else:
         raise NotImplementedError(
             "Only L-inf, L1 and L2 norms are " "currently implemented."

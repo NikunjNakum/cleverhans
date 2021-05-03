@@ -71,9 +71,11 @@ def fast_gradient_method(
     # If clipping is needed, reset all values outside of [clip_min, clip_max]
     if (clip_min is not None) or (clip_max is not None):
         # We don't currently support one-sided clipping
-        assert clip_min is not None and clip_max is not None
+        if not (clip_min is not None and clip_max is not None):
+            raise AssertionError
         adv_x = tf.clip_by_value(adv_x, clip_min, clip_max)
 
     if sanity_checks:
-        assert np.all(asserts)
+        if not np.all(asserts):
+            raise AssertionError
     return adv_x

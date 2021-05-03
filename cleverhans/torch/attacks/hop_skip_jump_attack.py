@@ -61,7 +61,8 @@ def hop_skip_jump_attack(
     """
     shape = (1,) + x.shape[1:]
     if y_target is not None:
-        assert image_target is not None, "Require a target image for targeted attack."
+        if image_target is None:
+            raise AssertionError("Require a target image for targeted attack.")
     if clip_min is not None and clip_max is not None:
         if clip_min > clip_max:
             raise ValueError(
@@ -341,7 +342,8 @@ def initialize(decision_function, sample, shape, clip_min, clip_max):
         message = (
             "Initialization failed! Try to use a misclassified image as `target_image`"
         )
-        assert num_evals < 1e4, message
+        if num_evals >= 1e4:
+            raise AssertionError(message)
 
     # Binary search to minimize l2 distance to original image.
     low = 0.0

@@ -29,4 +29,5 @@ class CleverHansTest(unittest.TestCase):
         """Assert that `x` and `y` have close to the same value"""
         # self.assertTrue(np.allclose(x, y)) doesn't give a useful message
         # on failure
-        assert np.allclose(x, y, *args, **kwargs), (x, y)
+        if not np.allclose(x, y, *args, **kwargs):
+            raise AssertionError(x, y)
