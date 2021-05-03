@@ -68,16 +68,12 @@ class HopSkipJumpAttack(Attack):
         self.parse_params(**kwargs)
         shape = [int(i) for i in x.get_shape().as_list()[1:]]
 
-        if (
-            self.sess is None
-        ):
+        if self.sess is None:
             raise AssertionError("Cannot use `generate` when no `sess` was provided")
         _check_first_dimension(x, "input")
         if self.y_target is not None:
             _check_first_dimension(self.y_target, "y_target")
-            if (
-                self.image_target is None
-            ):
+            if self.image_target is None:
                 raise AssertionError("Require a target image for targeted attack.")
             _check_first_dimension(self.image_target, "image_target")
 
