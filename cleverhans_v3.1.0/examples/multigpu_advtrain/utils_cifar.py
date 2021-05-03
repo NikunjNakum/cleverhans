@@ -50,7 +50,7 @@ def unpickle(file):
 
 
 def read_CIFAR10(data_folder):
-    """ Reads and parses examples from CIFAR10 data files """
+    """Reads and parses examples from CIFAR10 data files"""
 
     train_img = []
     train_label = []
@@ -117,7 +117,7 @@ def read_CIFAR10(data_folder):
 
 
 def read_CIFAR100(data_folder):
-    """ Reads and parses examples from CIFAR100 python data files """
+    """Reads and parses examples from CIFAR100 python data files"""
 
     train_img = []
     train_label = []
