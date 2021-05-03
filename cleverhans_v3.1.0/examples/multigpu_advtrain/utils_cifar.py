@@ -107,8 +107,6 @@ def read_CIFAR10(data_folder):
 
     train_img = train_img - mean_img
     test_img = test_img - mean_img
-    train_label = train_label
-    test_label = test_label
 
     train_label = np.eye(10)[train_label]
     test_label = np.eye(10)[test_label]

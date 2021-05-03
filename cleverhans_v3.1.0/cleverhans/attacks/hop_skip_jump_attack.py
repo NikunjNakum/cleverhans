@@ -68,15 +68,17 @@ class HopSkipJumpAttack(Attack):
         self.parse_params(**kwargs)
         shape = [int(i) for i in x.get_shape().as_list()[1:]]
 
-        assert (
-            self.sess is not None
-        ), "Cannot use `generate` when no `sess` was provided"
+        if (
+            self.sess is None
+        ):
+            raise AssertionError("Cannot use `generate` when no `sess` was provided")
         _check_first_dimension(x, "input")
         if self.y_target is not None:
             _check_first_dimension(self.y_target, "y_target")
-            assert (
-                self.image_target is not None
-            ), "Require a target image for targeted attack."
+            if (
+                self.image_target is None
+            ):
+                raise AssertionError("Require a target image for targeted attack.")
             _check_first_dimension(self.image_target, "image_target")
 
         # Set shape and d.
@@ -523,7 +525,8 @@ def initialize(decision_function, sample, shape, clip_min, clip_max):
         message = (
             "Initialization failed! Try to use a misclassified image as `target_image`"
         )
-        assert num_evals < 1e4, message
+        if num_evals >= 1e4:
+            raise AssertionError(message)
 
     # Binary search to minimize l2 distance to original image.
     low = 0.0
@@ -554,8 +557,7 @@ def geometric_progression_for_stepsize(
         success = decision_function(updated[None])[0]
         if success:
             break
-        else:
-            epsilon = epsilon / 2.0
+        epsilon = epsilon / 2.0
 
     return epsilon
 

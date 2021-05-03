@@ -68,7 +68,8 @@ class Dataset(object):
 
     @classmethod
     def in_memory_dataset(cls, x, y, shuffle=None, repeat=True):
-        assert x.shape[0] == y.shape[0]
+        if x.shape[0] != y.shape[0]:
+            raise AssertionError
         d = tf.data.Dataset.range(x.shape[0])
         if repeat:
             d = d.repeat()
@@ -229,10 +230,12 @@ def download_and_parse_mnist_file(file_name, datadir=None, force=False):
     # Parse the file
     with open_fn(file_name, "rb") as file_descriptor:
         header = file_descriptor.read(4)
-        assert len(header) == 4
+        if len(header) != 4:
+            raise AssertionError
 
         zeros, data_type, n_dims = struct.unpack(">HBB", header)
-        assert zeros == 0
+        if zeros != 0:
+            raise AssertionError
 
         hex_to_data_type = {
             0x08: "B",
@@ -254,7 +257,8 @@ def download_and_parse_mnist_file(file_name, datadir=None, force=False):
         data.byteswap()
 
         desired_items = functools.reduce(operator.mul, dim_sizes)
-        assert len(data) == desired_items
+        if len(data) != desired_items:
+            raise AssertionError
         return np.array(data).reshape(dim_sizes)
 
 
@@ -275,10 +279,14 @@ def data_mnist(
     :return: tuple of four arrays containing training data, training labels,
              testing data and testing labels.
     """
-    assert isinstance(train_start, int)
-    assert isinstance(train_end, int)
-    assert isinstance(test_start, int)
-    assert isinstance(test_end, int)
+    if not isinstance(train_start, int):
+        raise AssertionError
+    if not isinstance(train_end, int):
+        raise AssertionError
+    if not isinstance(test_start, int):
+        raise AssertionError
+    if not isinstance(test_end, int):
+        raise AssertionError
 
     X_train = (
         download_and_parse_mnist_file("train-images-idx3-ubyte.gz", datadir=datadir)

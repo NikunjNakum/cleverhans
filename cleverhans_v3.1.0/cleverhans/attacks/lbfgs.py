@@ -49,9 +49,10 @@ class LBFGS(Attack):
         :param x: (required) A tensor with the inputs.
         :param kwargs: See `parse_params`
         """
-        assert (
-            self.sess is not None
-        ), "Cannot use `generate` when no `sess` was provided"
+        if (
+            self.sess is None
+        ):
+            raise AssertionError("Cannot use `generate` when no `sess` was provided")
         self.parse_params(**kwargs)
 
         if self.y_target is None:
@@ -161,7 +162,8 @@ class LBFGS_impl(object):
         self.sess = sess
         self.x = x
         self.logits = logits
-        assert logits.op.type != "Softmax"
+        if logits.op.type == "Softmax":
+            raise AssertionError
         self.targeted_label = targeted_label
         self.targeted_attack = targeted_attack
         self.binary_search_steps = binary_search_steps
@@ -264,9 +266,10 @@ class LBFGS_impl(object):
             )
 
             adv_x = adv_x.reshape(oimgs.shape)
-            assert (
+            if not (
                 np.amax(adv_x) <= self.clip_max and np.amin(adv_x) >= self.clip_min
-            ), "fmin_l_bfgs_b returns are invalid"
+            ):
+                raise AssertionError("fmin_l_bfgs_b returns are invalid")
 
             # adjust the best result (i.e., the adversarial example with the
             # smallest perturbation in terms of L_2 norm) found so far
